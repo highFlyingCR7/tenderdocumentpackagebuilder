@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tender Document Package Builder - Prepare • Validate • Generate</title>
+  <meta name="description" content="Turn individual tender PDF documents into a checked, compliant, and correctly ordered final submission PDF dossier ready for procurement evaluation.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Local Vendor Scripts -->
+  <script src="assets/vendor/pdf-lib.min.js"></script>
+  <script src="assets/vendor/pdf.min.js"></script>
+  <script src="assets/vendor/jszip.min.js"></script>
+  <script src="assets/vendor/lucide.min.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- Clean Header -->
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand-section">
+          <div class="brand-logo">
+            <i data-lucide="shield-check" style="width: 20px; height: 20px;"></i>
+          </div>
+          <div>
+            <div class="brand-title">Tender Document Package Builder</div>
+            <div class="brand-subtitle">Prepare • Validate • Generate</div>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Language Switcher -->
+          <div class="lang-switcher">
+            <button class="lang-btn active" id="lang-btn-en">EN</button>
+            <button class="lang-btn font-bangla" id="lang-btn-bn">বাংলা</button>
+          </div>
+
+          <!-- Theme Toggle (Dark / Light Mode) -->
+          <button class="theme-toggle-btn" id="btn-theme-toggle" title="Switch to Dark Mode" aria-label="Toggle dark/light mode">
+            <i data-lucide="moon" id="theme-toggle-icon"></i>
+          </button>
+
+          <!-- Quick Actions Dropdown / Group -->
+          <button class="btn btn-secondary btn-sm" id="btn-load-sample-pack" title="Load sample pack with hidden defects">
+            <i data-lucide="folder-search" style="color: #d97706;"></i>
+            <span>Defect Demo</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-load-perfect-pack" title="Load 100% verified sample">
+            <i data-lucide="check-check" style="color: #16a34a;"></i>
+            <span>Perfect Demo</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-export-csv" title="Export checklist as CSV / Excel">
+            <i data-lucide="file-spreadsheet" style="color: #16a34a;"></i>
+            <span>CSV</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-save-project" title="Save workspace state">
+            <i data-lucide="save"></i>
+            <span>Save</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-open-project" title="Open saved project workspace">
+            <i data-lucide="folder-open"></i>
+            <span>Open</span>
+            <input type="file" id="input-project-file" accept=".tenderpack,.json" style="display: none;">
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-seal-modal" title="Upload company seal / signature stamp">
+            <i data-lucide="stamp" style="color: #d97706;"></i>
+            <span>Seal</span>
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-ai-copilot" title="AI Compliance Copilot">
+            <i data-lucide="bot" style="color: #2563eb;"></i>
+            <span>AI</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Top Dashboard Card: Tender Details & Package Readiness -->
+    <section class="top-dashboard-card">
+      <div class="top-dashboard-grid">
+        <!-- Left: Tender Details -->
+        <div class="tender-meta-left">
+          <div class="tender-meta-header">
+            <span class="tender-id-pill" id="tender-id-val">T-2026-0417</span>
+            <span class="tender-title-text" id="tender-title-val">Supply of IT Equipment</span>
+            <button class="btn btn-secondary btn-sm" id="btn-edit-tender" style="padding: 1px 6px; font-size: 0.72rem;">
+              <i data-lucide="edit-3" style="width: 10px; height: 10px;"></i> Edit
+            </button>
+          </div>
+          <div class="tender-sub-details">
+            <span>Entity: <strong id="tender-entity-val">Example Directorate</strong></span>
+            <span>Bidder: <strong id="tender-bidder-val">Example Company Ltd.</strong></span>
+            <span>Deadline: <strong class="deadline-highlight" id="tender-deadline-val">2026-10-20</strong></span>
+          </div>
+        </div>
+
+        <!-- Right: Readiness & Generate Button -->
+        <div class="readiness-box">
+          <div class="readiness-status-line">
+            <div id="readiness-banner-wrap">
+              <!-- Rendered dynamically: '✓ Package ready to generate' or '⚠ Package cannot be generated yet' -->
+            </div>
+            <button class="btn btn-success btn-lg" id="btn-generate-package">
+              <i data-lucide="file-down"></i>
+              <span>Generate Package</span>
+            </button>
+          </div>
+
+          <!-- Live Compliance Progress Meter -->
+          <div class="readiness-progress-wrap">
+            <div class="readiness-progress-header">
+              <span>Readiness Progress</span>
+              <span id="readiness-pct-text">0% Ready</span>
+            </div>
+            <div class="readiness-progress-track">
+              <div class="readiness-progress-bar" id="readiness-progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="readiness-counts" id="readiness-counts-row">
+            <!-- Stat counts: Total, OK, Missing, Expired -->
+          </div>
+          <div class="blocking-alert-box" id="blocking-issues-box" style="display: none;">
+            <ul id="blocking-issues-ul" style="list-style: none; display: flex; flex-direction: column; gap: 2px;"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main 2-Column Split Workspace -->
+    <main class="main-two-column-layout">
+
+      <!-- Left Column: Upload Section & Uploaded Files Pool -->
+      <section class="left-panel-card">
+        <div class="panel-title">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <i data-lucide="folder" style="width: 16px; height: 16px; color: var(--navy-dark);"></i>
+            <span>Uploaded Files</span>
+            <span class="brand-badge" id="uploaded-files-count">0 files</span>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-auto-match" title="Auto-match files to requirements">
+            <i data-lucide="sparkles" style="width: 12px; height: 12px;"></i> Auto-Match
+          </button>
+        </div>
+
+        <!-- Compact Drag & Drop Box -->
+        <div class="compact-dropzone" id="main-dropzone">
+          <i data-lucide="upload-cloud" style="width: 28px; height: 28px; color: var(--blue-accent); margin: 0 auto;"></i>
+          <div class="dropzone-label-title">Drag & drop PDFs here or browse</div>
+          <div class="dropzone-label-sub">Drop PDF files, requirements.json, or ZIP</div>
+          <div style="display: flex; gap: 6px; justify-content: center; margin-top: 10px; flex-wrap: wrap;">
+            <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+              <i data-lucide="file-plus"></i> Select PDFs
+              <input type="file" id="input-pdf-files" accept=".pdf" multiple style="display: none;">
+            </label>
+            <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+              <i data-lucide="file-code"></i> JSON
+              <input type="file" id="input-req-json" accept=".json" style="display: none;">
+            </label>
+            <label class="btn btn-secondary btn-sm" style="cursor: pointer;">
+              <i data-lucide="file-archive"></i> ZIP
+              <input type="file" id="input-zip-pack" accept=".zip" style="display: none;">
+            </label>
+          </div>
+        </div>
+
+        <!-- Quick Search/Filter for Files -->
+        <div>
+          <input type="text" id="filter-uploaded-files" class="files-search-input" placeholder="🔍 Search uploaded files...">
+        </div>
+
+        <!-- Scrollable Uploaded Files Pool -->
+        <div class="uploaded-files-scroll" id="uploaded-files-container">
+          <!-- Dynamically rendered file items -->
+        </div>
+      </section>
+
+      <!-- Right Column: Document Checklist Cards -->
+      <section class="right-panel-card">
+        <div class="checklist-header-row">
+          <div class="checklist-title">
+            <i data-lucide="clipboard-list" style="width: 18px; height: 18px; color: var(--navy-dark);"></i>
+            <span>Required Document Checklist</span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">
+            Match uploaded files to requirements & verify validity
+          </div>
+        </div>
+
+        <!-- Table Headings -->
+        <div class="checklist-table-headings">
+          <div>#</div>
+          <div>Requirement</div>
+          <div>Matched PDF</div>
+          <div>Expiry Date</div>
+          <div style="text-align: right;">Status</div>
+        </div>
+
+        <!-- Requirements List Cards -->
+        <div class="requirements-list-container" id="requirements-checklist-container">
+          <!-- Dynamically rendered requirement items -->
+        </div>
+      </section>
+
+    </main>
+
+  </div> <!-- End App Container -->
+
+  <!-- Modal: PDF Viewer & Expiry Date Inspector -->
+  <div class="modal-backdrop" id="modal-pdf-viewer">
+    <div class="modal-window modal-window-xl">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="file-text" style="color: var(--blue-accent);"></i>
+          <span id="pdf-modal-title">Document Preview</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 10px;" id="pdf-modal-req-info"></span>
+        </div>
+        <button class="btn btn-secondary btn-icon" id="btn-close-pdf-modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 14px;">
+        <div class="pdf-viewer-layout">
+          <!-- Canvas Container -->
+          <div class="pdf-canvas-container">
+            <div class="pdf-toolbar">
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <button class="btn btn-secondary btn-sm" id="btn-pdf-prev"><i data-lucide="chevron-left"></i></button>
+                <span id="pdf-page-indicator" style="font-weight: 700;">Page 1 of 1</span>
+                <button class="btn btn-secondary btn-sm" id="btn-pdf-next"><i data-lucide="chevron-right"></i></button>
+              </div>
+              <div style="display: flex; gap: 4px; align-items: center;">
+                <button class="btn btn-secondary btn-sm" id="btn-pdf-zoom-out"><i data-lucide="zoom-out"></i></button>
+                <button class="btn btn-secondary btn-sm" id="btn-pdf-zoom-in"><i data-lucide="zoom-in"></i></button>
+              </div>
+            </div>
+            <div class="pdf-canvas-viewport">
+              <canvas id="pdf-render-canvas"></canvas>
+            </div>
+          </div>
+
+          <!-- Inspector Sidebar -->
+          <div class="pdf-inspector-sidebar">
+            <div class="form-group" style="background: var(--bg-card); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-light);">
+              <label class="form-label">Expiry / Validity Date</label>
+              <input type="date" id="manual-expiry-input" class="form-input" style="width: 100%;">
+              <button class="btn btn-primary btn-sm" id="btn-save-manual-expiry" style="width: 100%; margin-top: 8px;">
+                <i data-lucide="save"></i> Update Validity Date
+              </button>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btn-ai-inspect-doc" style="width: 100%; justify-content: center;">
+              <i data-lucide="sparkles" style="color: var(--blue-accent);"></i> AI Analyze Text
+            </button>
+            <div style="flex: 1; display: flex; flex-direction: column;">
+              <label class="form-label">Extracted Content</label>
+              <div id="pdf-extracted-text-preview" style="flex: 1; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 8px; font-size: 0.72rem; font-family: var(--font-mono); overflow-y: auto; max-height: 180px; white-space: pre-wrap;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Package Generated Result -->
+  <div class="modal-backdrop" id="modal-package-result">
+    <div class="modal-window">
+      <div class="modal-header" style="background: var(--color-ok-bg); border-bottom: 1px solid var(--color-ok-border);">
+        <div class="modal-title" style="color: var(--color-ok);">
+          <i data-lucide="check-circle-2"></i>
+          <span>✓ Package generated successfully</span>
+        </div>
+        <button class="btn btn-secondary btn-icon" id="btn-close-result-modal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center;">
+        <div>
+          <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; color: var(--navy-dark);">
+            Official Submission Dossier Compiled
+          </h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">
+            • Page 1: Cover Page &nbsp;• Page 2: Index &nbsp;• Pages 3+: Documents &nbsp;• Running Footers.
+          </p>
+          <div style="background: var(--bg-subtle); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; font-size: 0.82rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Total Pages:</span>
+              <strong id="result-total-pages" style="color: var(--navy-dark);">15 Pages</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">Included Documents:</span>
+              <strong id="result-total-docs" style="color: var(--navy-dark);">9 Documents</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);">File Size:</span>
+              <strong id="result-file-size" style="color: var(--navy-dark);">1.3 MB</strong>
+            </div>
+          </div>
+          <button class="btn btn-success btn-lg" id="btn-download-pdf-pkg" style="width: 100%;">
+            <i data-lucide="download"></i> Download Package (.pdf)
+          </button>
+        </div>
+        <div style="background: #1e293b; border-radius: var(--radius-sm); padding: 12px; text-align: center;">
+          <div style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 6px;">Cover Page Preview</div>
+          <canvas id="result-preview-canvas" style="box-shadow: 0 4px 12px rgba(0,0,0,0.3); border-radius: 4px; max-width: 100%; height: auto;"></canvas>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.closeModal('modal-package-result')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Seal & Signature -->
+  <div class="modal-backdrop" id="modal-seal-signature">
+    <div class="modal-window" style="max-width: 480px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="stamp" style="color: #d97706;"></i> Company Seal & Signature
+        </div>
+        <button class="btn btn-secondary btn-icon" id="btn-close-seal-modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Upload PNG Seal / Signature (Transparent)</label>
+          <input type="file" id="input-seal-image" accept="image/png" class="form-input">
+        </div>
+        <div style="text-align: center; margin: 10px 0;">
+          <img id="seal-preview-img" style="display: none; max-width: 120px; max-height: 80px; margin: 0 auto; background: #fff; padding: 4px; border: 1px solid var(--border-light); border-radius: 4px;" alt="Seal Preview">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stamp Placement Rule</label>
+          <select class="form-select" id="seal-placement-select">
+            <option value="all">All Document Pages (Bottom Right)</option>
+            <option value="last_page_each_doc">Last Page of Each Document</option>
+            <option value="first_page_each_doc">First Page of Each Document</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="app.closeModal('modal-seal-signature')">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: AI Copilot -->
+  <div class="modal-backdrop" id="modal-ai-copilot">
+    <div class="modal-window" style="max-width: 620px;">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="bot" style="color: var(--blue-accent);"></i> AI Tender Compliance Copilot
+        </div>
+        <button class="btn btn-secondary btn-icon" id="btn-close-ai-modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Google Gemini API Key (Optional)</label>
+          <div style="display: flex; gap: 6px;">
+            <input type="password" id="ai-api-key-input" class="form-input" placeholder="AIzaSy..." style="flex: 1;">
+            <button class="btn btn-primary btn-sm" id="btn-save-ai-key">Save</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-run-ai-audit" style="width: 100%; justify-content: center; margin: 10px 0;">
+          <i data-lucide="sparkles"></i> Run AI Full Dossier Audit
+        </button>
+        <div class="form-group">
+          <label class="form-label">AI Audit Verdict</label>
+          <div id="ai-audit-output" style="background: var(--bg-subtle); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 10px; font-size: 0.78rem; max-height: 200px; overflow-y: auto; white-space: pre-wrap; font-family: var(--font-mono);">
+Click 'Run AI Full Dossier Audit' to evaluate package readiness.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="app.closeModal('modal-ai-copilot')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Tender Details -->
+  <div class="modal-backdrop" id="modal-edit-tender">
+    <div class="modal-window" style="max-width: 520px;">
+      <div class="modal-header">
+        <div class="modal-title"><i data-lucide="edit-3"></i> Edit Tender Details</div>
+        <button class="btn btn-secondary btn-icon" id="btn-close-tender-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="form-edit-tender">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Tender Reference ID</label>
+            <input type="text" id="edit-tender-id" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tender Title</label>
+            <input type="text" id="edit-tender-title" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Procuring Entity</label>
+            <input type="text" id="edit-tender-entity" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bidder Company Name</label>
+            <input type="text" id="edit-tender-bidder" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Submission Deadline (YYYY-MM-DD)</label>
+            <input type="date" id="edit-tender-deadline" class="form-input" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="app.closeModal('modal-edit-tender')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container & Loading Overlay -->
+  <div class="toast-container" id="toast-container"></div>
+  <div class="loading-overlay" id="global-loading">
+    <div class="spinner"></div>
+    <div style="font-weight: 700; font-size: 0.95rem;" id="loading-text">Processing...</div>
+  </div>
+
+  <!-- App Scripts -->
+  <script src="js/validator.js"></script>
+  <script src="js/pdf-service.js"></script>
+  <script src="js/ai-service.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

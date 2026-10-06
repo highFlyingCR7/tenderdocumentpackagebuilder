@@ -1,0 +1,83 @@
+{
+  "tender": {
+    "tender_id": "T-2026-0417",
+    "title": "Supply of IT Equipment and Networking Infrastructure",
+    "procuring_entity": "Directorate General of Health Services (DGHS)",
+    "bidder": "Apex Tech Solutions Ltd.",
+    "submission_deadline": "2026-10-20"
+  },
+  "requirements": [
+    {
+      "id": "R01",
+      "order": 1,
+      "title_en": "Trade License",
+      "title_bn": "হালনাগাদ ট্রেড লাইসেন্স",
+      "mandatory": true,
+      "has_expiry": true
+    },
+    {
+      "id": "R02",
+      "order": 2,
+      "title_en": "TIN Certificate & Tax Return",
+      "title_bn": "ট্যাক্স আইডেন্টিফিকেশন নম্বর (TIN) ও রিটার্ন দাখিলের প্রমাণপত্র",
+      "mandatory": true,
+      "has_expiry": false
+    },
+    {
+      "id": "R03",
+      "order": 3,
+      "title_en": "VAT / BIN Registration Certificate",
+      "title_bn": "মূল্য সংযোজন কর (মূসক) ও বিআইএন নিবন্ধন সনদ",
+      "mandatory": true,
+      "has_expiry": false
+    },
+    {
+      "id": "R04",
+      "order": 4,
+      "title_en": "Bank Solvency Certificate",
+      "title_bn": "ব্যাংক স্বচ্ছলতার সনদপত্র",
+      "mandatory": true,
+      "has_expiry": true
+    },
+    {
+      "id": "R05",
+      "order": 5,
+      "title_en": "Similar Experience Certificate",
+      "title_bn": "সমজাতীয় কাজের বাস্তবায়ন অভিজ্ঞতা সনদ",
+      "mandatory": true,
+      "has_expiry": false
+    },
+    {
+      "id": "R06",
+      "order": 6,
+      "title_en": "Manufacturer Authorization Letter (MAF)",
+      "title_bn": "প্রস্তুতকারকের অনুমোদনপত্র (MAF)",
+      "mandatory": false,
+      "has_expiry": true
+    },
+    {
+      "id": "R07",
+      "order": 7,
+      "title_en": "Technical Proposal & Datasheets",
+      "title_bn": "কারিগরি প্রস্তাবনা ও স্পেসিফিকেশন বিবরণী",
+      "mandatory": true,
+      "has_expiry": false
+    },
+    {
+      "id": "R08",
+      "order": 8,
+      "title_en": "Tender Submission Letter & Financial Offer",
+      "title_bn": "দরপত্র দাখিলপত্র ও আর্থিক প্রস্তাবনা",
+      "mandatory": true,
+      "has_expiry": false
+    },
+    {
+      "id": "R09",
+      "order": 9,
+      "title_en": "Power of Attorney for Signatory",
+      "title_bn": "ক্ষমতাপ্রাপ্ত প্রতিনিধির আমমোক্তারনামা",
+      "mandatory": false,
+      "has_expiry": false
+    }
+  ]
+}
